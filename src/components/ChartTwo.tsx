@@ -12,38 +12,27 @@ const ChartTwo: React.FC = () => {
     const [rightData, setRightData] = useState<number[]>([]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch("https://trello.vimlc.uz/professional");
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
+        fetch("https://trello.vimlc.uz/professional")
+            .then((res) => res.json())
+            .then((data) => {
+                const percents: PercentData[] = data.percents;
+                const half = Math.ceil(percents.length / 2);
+                const leftGroup = percents.slice(0, half);
+                const rightGroup = percents.slice(half);
 
-                if (data?.percents && Array.isArray(data.percents)) {
-                    const percents: PercentData[] = data.percents;
-                    const half = Math.ceil(percents.length / 2);
-                    const leftGroup = percents.slice(0, half);
-                    const rightGroup = percents.slice(half);
-
-                    setCategories([
-                        ...leftGroup.map((item) => item.label),
-                        ...rightGroup.map((item) => item.label),
-                    ]);
-                    setLeftData(leftGroup.map((item) => item.percentage));
-                    setRightData(rightGroup.map((item) => item.percentage));
-                } else {
-                    console.error("Invalid data format:", data);
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
-        fetchData();
+                setCategories([
+                    ...leftGroup.map((item) => item.label),
+                    ...rightGroup.map((item) => item.label),
+                ]);
+                setLeftData(leftGroup.map((item) => item.percentage));
+                setRightData(rightGroup.map((item) => item.percentage));
+            })
+            .catch((err) => {
+                console.error(err);
+            });
     }, []);
 
-    const barChartOptionsLeft = {
+    const barChartOptionsLeft: ApexCharts.ApexOptions = {
         chart: {
             type: "bar",
             height: 350,
@@ -67,7 +56,7 @@ const ChartTwo: React.FC = () => {
         },
     };
 
-    const barChartOptionsRight = {
+    const barChartOptionsRight: ApexCharts.ApexOptions = {
         chart: {
             type: "bar",
             height: 350,
@@ -112,10 +101,12 @@ const ChartTwo: React.FC = () => {
                             chart: { type: "radar", height: 350 },
                             xaxis: { categories: categories },
                         }}
-                        series={[{
-                            name: "Skills",
-                            data: [...leftData, ...rightData],
-                        }]}
+                        series={[
+                            {
+                                name: "Skills",
+                                data: [...leftData, ...rightData],
+                            },
+                        ]}
                         type="radar"
                         height={350}
                     />
